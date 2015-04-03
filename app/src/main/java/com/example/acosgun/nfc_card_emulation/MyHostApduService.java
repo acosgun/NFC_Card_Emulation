@@ -1,8 +1,10 @@
 package com.example.acosgun.nfc_card_emulation;
 
+import android.content.SharedPreferences;
 import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 
 /**
@@ -11,8 +13,10 @@ import android.util.Log;
 public class MyHostApduService extends HostApduService {
 
     private static final String TAG = "MyHCEService";
-    String human_name = "Akansel";
-    int floor_num = 7;
+    public static final String PREFS_NAME = "MyPrefsFile";
+
+    String human_name;
+    int floor_num;
 
     @Override
     public byte[] processCommandApdu(byte[] apdu, Bundle extras) {
@@ -20,11 +24,23 @@ public class MyHostApduService extends HostApduService {
 
 
 
-        //byte[] arr= HexStringToByteArray(human_name);
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        human_name= settings.getString("name", "Guest");
+        floor_num=settings.getInt("floor", 0);
+        if (human_name == null || human_name.isEmpty()) {
+            human_name = "Guest";
+        }
+        if(floor_num <= 0 || floor_num >=127)
+        {
+            Toast toast = Toast.makeText(this, "Please enter a valid floor number..", Toast.LENGTH_SHORT);
+            toast.show();
+            return null;
+        }
+
         byte[] arr=human_name.getBytes();
 
         byte[] res = new byte[3+arr.length];
-        res[0]=(byte) 7;
+        res[0]=(byte) floor_num;
         for(int i=0; i<arr.length; i++)
         {
          res[i+1]=arr[i];
